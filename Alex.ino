@@ -53,6 +53,11 @@ unsigned long newDist;
 unsigned long deltaTicks;
 unsigned long targetTicks;
 
+//colour sensor data
+int red = 0;
+int green = 0;
+int blue = 0;
+
 // Ultrasound Pins
 int TRIG_PIN = 50;
 int ECHO_PIN = 48;
@@ -121,9 +126,10 @@ void sendStatus()
   TPacket statusPacket;
   statusPacket.packetType = PACKET_TYPE_RESPONSE;
   statusPacket.command = RESP_STATUS;
-  uint32_t inputParams[10] = {leftForwardTicks,rightForwardTicks,leftReverseTicks,rightReverseTicks,
-  leftForwardTicksTurns,rightForwardTicksTurns,leftReverseTicksTurns,rightReverseTicksTurns,forwardDist,reverseDist};
-  for (int i =0; i < 10; i++){
+  uint32_t inputParams[13] = {leftForwardTicks,rightForwardTicks,leftReverseTicks,rightReverseTicks,
+  leftForwardTicksTurns,rightForwardTicksTurns,leftReverseTicksTurns,rightReverseTicksTurns,forwardDist,reverseDist,
+  red,green,blue};
+  for (int i =0; i < 13; i++){
     statusPacket.params[i] = inputParams[i];
   }
   sendResponse(&statusPacket);
@@ -359,6 +365,12 @@ void clearCounters()
   reverseDist=0; 
 }
 
+void clearColorCounters(){
+  red = 0;
+  green = 0;
+  blue = 0;
+}
+
 // Clears one particular counter
 void clearOneCounter(int which)
 {
@@ -440,6 +452,9 @@ void handleCommand(TPacket *command)
     case COMMAND_COLOR_SENSOR:
         sendOK();
         //PLACEHOLDER FOR COLOR SENSOR FUNCTION
+        sendStatus();
+        clearColorCounters();
+      break;
     default:
       sendBadCommand();
   }
@@ -489,7 +504,7 @@ void setupUltra() {
 }
 
 float getDistance() {
-  digitalWrite(TRIG_PIN, HIGH );
+  digitalWrite(TRIG_PIN, HIGH);
   delayMicroseconds(10);
   digitalWrite(TRIG_PIN , LOW);
   unsigned long microsecs = pulseIn(ECHO_PIN, HIGH);
@@ -565,7 +580,7 @@ void loop() {
   if(dir==FORWARD) 
   { 
     wallDist = getDistance()
-   if(forwardDist > newDist || wallDist > 5) 
+   if(forwardDist > newDist || (wallDist != 0 && wallDist < 5)) 
    { 
     deltaDist=0; 
     newDist=0; 
