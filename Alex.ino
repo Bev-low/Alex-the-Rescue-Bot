@@ -66,6 +66,8 @@ unsigned long red = 0;
 unsigned long green = 0;
 unsigned long blue = 0;
 
+char colour = 'U'; //set unknown as default
+
 // Ultrasound Pins
 int TRIG_PIN = 50;
 int ECHO_PIN = 48;
@@ -137,10 +139,10 @@ void sendStatus()
   TPacket statusPacket;
   statusPacket.packetType = PACKET_TYPE_RESPONSE;
   statusPacket.command = RESP_STATUS;
-  uint32_t inputParams[13] = {leftForwardTicks,rightForwardTicks,leftReverseTicks,rightReverseTicks,
+  uint32_t inputParams[14] = {leftForwardTicks,rightForwardTicks,leftReverseTicks,rightReverseTicks,
   leftForwardTicksTurns,rightForwardTicksTurns,leftReverseTicksTurns,rightReverseTicksTurns,forwardDist,reverseDist,
-  red, green, blue};
-  for (int i = 0; i < 13; i++){
+  red, green, blue, (uint32_t)colour};
+  for (int i = 0; i < 14; i++){
     statusPacket.params[i] = inputParams[i];
   }
   sendResponse(&statusPacket);
@@ -570,23 +572,27 @@ unsigned long getBluePW() {
   return PW;
 }
 
-void identifyColour(int Red, int Green, int Blue) 
+char identifyColour(int Red, int Green, int Blue) 
 { 
   if (Red < 70 && Blue < 80 && Green < 90) //see what values it gives, not sure about this 
   { 
-    dbprintf("White\n"); 
+    dbprintf("White\n");
+    return 'W';
   } else if(Red > 50){ 
     if(Red > 80 && Green < 190){ 
       dbprintf("Green\n");
+    return 'G';
     } 
     else if(Red <70)  
     { 
       dbprintf("Red\n"); 
+      return 'R';
     } else {
       dbprintf("Unknown\n");
     }
   } else { 
     dbprintf("Unknown\n");
+    return 'U';
   } 
 } 
 
@@ -624,7 +630,7 @@ void readColour() {
   // Serial.print(blue); 
    
   // Print output to Serial Monitor 
-  identifyColour(red, green, blue); 
+  colour = identifyColour(red, green, blue); 
   delay(500);
 } 
 
